@@ -1,0 +1,1 @@
+This is a Docker development container for [ResMon](https://github.com/res-mon/ResMon) with all required dependencies.
