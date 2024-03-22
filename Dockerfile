@@ -12,7 +12,7 @@ FROM golang:1.22.1-alpine3.19 AS go
 FROM node:21.7.1-alpine3.19
 
 
-RUN apk add --no-cache build-base gcc musl-dev sqlite-dev git ca-certificates wget su-exec && npm install -g elm
+RUN apk add --no-cache build-base gcc musl-dev sqlite-dev git ca-certificates wget su-exec
 
 # From https://hub.docker.com/_/golang
 ENV GOLANG_VERSION=1.22.1
