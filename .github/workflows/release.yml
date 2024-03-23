@@ -8,6 +8,33 @@ on:
     workflow_dispatch:
 
 jobs:
+    build-elm: 
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main'
+        steps:
+            - name: Update environment path
+              run: echo "PATH=/root/.ghcup/bin:$PATH" >> $GITHUB_ENV
+            
+            - name: Install packages and cleanup
+              run: |
+                sudo apt update
+                sudo apt install -y wget build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev pkg-config zlib1g-dev
+                sudo apt clean
+            
+            - name: Install ghcup
+              run: |
+                curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+                ghcup install ghc 8.4.3 && ghcup install cabal 2.4.1
+                ghcup set ghc 8.4.3 && ghcup set cabal 2.4.1
+
+            - name: Build elm
+              run: |
+                wget https://github.com/elm/compiler/archive/refs/tags/0.19.1.tar.gz
+                tar -xvzf ./0.19.1.tar.gz
+                cd compiler-0.19.1/ && rm worker/elm.cabal && cabal new-update && cabal new-configure --ghc-option=-optl=-pthread && cabal new-build
+                cp dist-newstyle/build/x86_64-linux/ghc-8.4.3/elm-0.19.1/x/elm/build/elm/elm /
+                chmod 777 /elm
+
     release:
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main'
