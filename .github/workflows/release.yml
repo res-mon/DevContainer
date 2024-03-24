@@ -1,85 +1,58 @@
 name: Release
 
 on:
-    push:
-        branches: ["main"]
-    schedule:
-        - cron: "0 0 * * MON"
-    workflow_dispatch:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "0 0 * * MON"
+  workflow_dispatch:
 
 jobs:
-    build-elm: 
-        runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main'
-        steps:
-            - name: Update environment path
-              run: echo "PATH=/root/.ghcup/bin:$PATH" >> $GITHUB_ENV
-            
-            - name: Install packages and cleanup
-              run: |
-                sudo apt update
-                sudo apt install -y wget build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev pkg-config zlib1g-dev
-                sudo apt clean
-            
-            - name: Install ghcup
-              run: |
-                curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-                ghcup install ghc 8.4.3 && ghcup install cabal 2.4.1
-                ghcup set ghc 8.4.3 && ghcup set cabal 2.4.1
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Build elm
-              run: |
-                wget https://github.com/elm/compiler/archive/refs/tags/0.19.1.tar.gz
-                tar -xvzf ./0.19.1.tar.gz
-                cd compiler-0.19.1/ && rm worker/elm.cabal && cabal new-update && cabal new-configure --ghc-option=-optl=-pthread && cabal new-build
-                cp dist-newstyle/build/x86_64-linux/ghc-8.4.3/elm-0.19.1/x/elm/build/elm/elm /
-                chmod 777 /elm
+      - name: Log in to GitHub Packages
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
+        with:
+          username: ${{ secrets.GH_PACKAGES_USERNAME }}
+          password: ${{ secrets.GH_PACKAGES_PASSWORD }}
+          registry: ghcr.io
 
-    release:
-        runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main'
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Log in to GitHub Packages
-              uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
-              with:
-                  username: ${{ secrets.GH_PACKAGES_USERNAME }}
-                  password: ${{ secrets.GH_PACKAGES_PASSWORD }}
-                  registry: ghcr.io
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+      - name: Calculate version
+        run: |
+          YEAR=$(date +"%Y")
+          MONTH=$(date +"%m")
+          DAY=$(date +"%d")
+          NEW_TAG="v$YEAR.$MONTH.$DAY"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "LATEST_TAG=ghcr.io/res-mon/dev-container:latest" >> $GITHUB_ENV
+          echo "PACKAGE_TAG=ghcr.io/res-mon/dev-container:$NEW_TAG" >> $GITHUB_ENV
 
-            - name: Cache Docker layers
-              uses: actions/cache@v4
-              with:
-                  path: /tmp/.buildx-cache
-                  key: ${{ runner.os }}-buildx-${{ github.sha }}
-                  restore-keys: |
-                      ${{ runner.os }}-buildx-
-
-            - name: Calculate version
-              run: |
-                  YEAR=$(date +"%Y")
-                  MONTH=$(date +"%m")
-                  DAY=$(date +"%d")
-                  NEW_TAG="v$YEAR.$MONTH.$DAY"
-                  echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-                  echo "LATEST_TAG=ghcr.io/res-mon/dev-container:latest" >> $GITHUB_ENV
-                  echo "PACKAGE_TAG=ghcr.io/res-mon/dev-container:$NEW_TAG" >> $GITHUB_ENV
-
-            - name: Build and push Docker image
-              uses: docker/build-push-action@v5
-              with:
-                  context: .
-                  file: ./Dockerfile
-                  push: true
-                  tags: "${{ env.LATEST_TAG }},\
-                      ${{ env.PACKAGE_TAG }}"
-                  builder: ${{ steps.buildx.outputs.name }}
-                  platforms: linux/amd64,linux/arm64/v8
-                  cache-from: type=local,src=/tmp/.buildx-cache
-                  cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: "${{ env.LATEST_TAG }},\
+            ${{ env.PACKAGE_TAG }}"
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
