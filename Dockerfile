@@ -4,6 +4,7 @@ FROM ubuntu:23.04 AS elm
 ENV PATH=/root/.ghcup/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN apt update
 RUN apt install -y wget build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev pkg-config zlib1g-dev
+RUN rm -rf /var/lib/apt/lists/*
 RUN curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 RUN ghcup install ghc 8.4.3 && ghcup install cabal 2.4.1
 RUN ghcup set ghc 8.4.3 && ghcup set cabal 2.4.1
