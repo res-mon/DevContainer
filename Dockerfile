@@ -11,7 +11,7 @@ RUN ghcup set ghc 8.4.3 && ghcup set cabal 2.4.1
 RUN wget https://github.com/elm/compiler/archive/refs/tags/0.19.1.tar.gz
 RUN tar -xvzf ./0.19.1.tar.gz
 RUN cd compiler-0.19.1/ && rm worker/elm.cabal && cabal new-update && cabal new-configure --ghc-option=-optl=-pthread && cabal new-build
-RUN cp compiler-0.19.1/dist-newstyle/build/x86_64-linux/ghc-8.4.3/elm-0.19.1/x/elm/build/elm/elm /
+RUN cp compiler-0.19.1/dist-newstyle/build/*/ghc-8.4.3/elm-0.19.1/x/elm/build/elm/elm /
 RUN chmod 777 /elm
 
 
