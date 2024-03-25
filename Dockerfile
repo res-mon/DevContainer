@@ -1,6 +1,6 @@
 # From https://github.com/based-template/building-elm-from-source
 # From https://www.haskell.org/ghcup/install/
-FROM ubuntu:23.04 AS elm
+FROM ubuntu:24.04 AS elm
 ENV PATH=/root/.ghcup/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN apt update
 RUN apt install -y wget build-essential curl libffi-dev libffi8ubuntu1 libgmp-dev libgmp10 libncurses-dev pkg-config zlib1g-dev
