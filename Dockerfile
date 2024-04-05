@@ -19,7 +19,7 @@ FROM golang:1.22.1-bookworm AS go
 
 
 
-FROM node:21.7.1-bookworm
+FROM node:21.7.2-bookworm
 RUN apt update && apt install -y build-essential gosu sudo lynx git wget ca-certificates musl-dev gcc libc6-dev mingw-w64 gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu && rm -rf /var/lib/apt/lists/*
 
 # From https://hub.docker.com/_/golang
