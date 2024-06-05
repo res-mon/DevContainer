@@ -15,7 +15,7 @@ RUN cp compiler-0.19.1/dist-newstyle/build/*/ghc-8.4.3/elm-0.19.1/x/elm/build/el
 RUN chmod 777 /elm
 
 
-FROM golang:1.22.1-bookworm AS go
+FROM golang:1.22.4-bookworm AS go
 
 
 
